@@ -5,6 +5,8 @@ import logging
 
 import django
 from django.db import models
+from mongoengine import Document, signals
+from mongoengine.queryset.base import BaseQuerySet
 from django.db.models import signals
 from django.db.models.sql import query, EmptyResultSet
 from django.utils import encoding
@@ -15,7 +17,6 @@ from .invalidation import invalidator, flush_key, make_key, byid, cache
 
 
 class NullHandler(logging.Handler):
-
     def emit(self, record):
         pass
 
@@ -25,7 +26,6 @@ log.addHandler(NullHandler())
 
 
 class CachingManager(models.Manager):
-
     # Tell Django to use this manager when resolving foreign keys.
     use_for_related_fields = True
 
@@ -129,7 +129,6 @@ class CacheMachine(object):
 
 
 class CachingQuerySet(models.query.QuerySet):
-
     _default_timeout_pickle_key = '__DEFAULT_TIMEOUT__'
 
     def __init__(self, *args, **kw):
@@ -257,6 +256,7 @@ class CachingMixin(object):
         # This ensures all cached copies of an object will be invalidated
         # regardless of the DB on which they're modified/deleted.
         return self._cache_key(self.pk, incl_db and self._state.db or None)
+
     cache_key = property(get_cache_key)
 
     @classmethod
@@ -296,7 +296,6 @@ class CachingMixin(object):
 
 
 class CachingRawQuerySet(models.query.RawQuerySet):
-
     def __init__(self, *args, **kw):
         timeout = kw.pop('timeout', DEFAULT_TIMEOUT)
         super(CachingRawQuerySet, self).__init__(*args, **kw)
@@ -358,6 +357,7 @@ class cached_method(object):
 
     Lifted from werkzeug.
     """
+
     def __init__(self, func):
         self.func = func
         functools.update_wrapper(self, func)
@@ -381,6 +381,7 @@ class MethodWrapper(object):
     The first call for a set of (args, kwargs) will use an external cache.
     After that, an object-local dict cache will be used.
     """
+
     def __init__(self, obj, func):
         self.obj = obj
         self.func = func
